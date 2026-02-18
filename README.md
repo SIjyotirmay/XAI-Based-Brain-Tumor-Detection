@@ -85,6 +85,8 @@ The results demonstrate accurate tumor localization, smooth boundaries, and robu
 ## 🔍 Explainable AI (XAI)
 Grad-CAM is used to visualize regions of MRI scans that most influence model predictions. This improves transparency, supports clinical validation, and enhances trust in the automated system.
 
+![alt text](image.png)
+
 ---
 ## 🚀 Future Work
 - Integration of LIME and SHAP
@@ -103,4 +105,3 @@ Grad-CAM is used to visualize regions of MRI scans that most influence model pre
 
 ---
 
-## 📂 Repository Structure
