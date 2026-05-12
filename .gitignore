@@ -1,4 +1,9 @@
 Segmentation/SwinHafNet_model_8535.pth
 Segmentation/__pycache__/
-Segmentation/archive/
+Segmentation/archive/brisc2025/segmentation_input2/
 Segmentation/archive1/
+
+Classification/Decoder_methods.py
+Classification/SwinHafNet_model_8535.pth
+Classification/__pycache__/
+Classification/archive/
