@@ -17,7 +17,7 @@ from shap_explainer import build_background_tensor, glob_mri_paths, SHAPExplaine
 # =============================================================================
 # DEVICE
 # =============================================================================
-
+torch.cuda.empty_cache()
 device = "cuda" if torch.cuda.is_available() else "cpu"
 print("Device:", device)
 

@@ -69,6 +69,21 @@ EXCLUDE_IMAGES = {
     "brisc2025_test_00131_gl_co_t1.jpg",
     "brisc2025_test_00132_gl_co_t1.jpg",
     "brisc2025_test_00176_gl_sa_t1.jpg",
+    "brisc2025_test_00813_pi_ax_t1.jpg",
+    "brisc2025_test_00793_pi_ax_t1.jpg",
+    "brisc2025_test_00813_pi_ax_t1.jpg",
+    "brisc2025_test_00838_pi_co_t1.jpg",
+    "brisc2025_test_00005_gl_ax_t1.jpg",
+    "brisc2025_test_00045_gl_ax_t1.jpg",
+    "brisc2025_test_00053_gl_ax_t1.jpg",
+    "brisc2025_test_00193_gl_sa_t1.jpg",
+    "brisc2025_test_00041_gl_ax_t1.jpg",
+    "brisc2025_test_00067_gl_ax_t1.jpg",
+    "brisc2025_test_00112_gl_co_t1.jpg",
+    "brisc2025_test_00046_gl_ax_t1.jpg",
+    "brisc2025_test_00061_gl_ax_t1.jpg",
+    "brisc2025_test_00471_me_co_t1.jpg",
+    "brisc2025_test_00820_pi_ax_t1.jpg"
 
 }
 
@@ -77,8 +92,39 @@ print(f"Excluded Images: {len(EXCLUDE_IMAGES)}")
 # ============================================
 # POST PROCESS
 # ============================================
+def tta_predict(image):
 
-def post_process(pred, min_area=20):
+    preds = []
+
+    # original
+    p = predict(image)
+    preds.append(p)
+
+    # hflip
+    # img = np.fliplr(image)
+    img = np.fliplr(image).copy()
+    p = predict(img)
+    p = np.fliplr(p)
+    preds.append(p)
+
+    # vflip
+    # img = np.flipud(image)
+    img = np.flipud(image).copy()
+    p = predict(img)
+    p = np.flipud(p)
+    preds.append(p)
+
+    # hv flip
+    # img = np.flipud(np.fliplr(image))
+    img = np.flipud(np.fliplr(image)).copy()
+    p = predict(img)
+    p = np.flipud(np.fliplr(p))
+    preds.append(p)
+
+    return np.mean(preds, axis=0)
+
+
+def post_process(pred, min_area=10):
 
     pred = pred.astype(np.uint8)
 
@@ -277,13 +323,69 @@ def evaluate():
         # ------------------------------------
         # PREDICT
         # ------------------------------------
+        # if cls == "glioma":
 
-        pred_prob = predict(image)
+        #     image = cv2.GaussianBlur(
+        #         image,
+        #         (3,3),
+        #         0
+        #     )
 
-        threshold = THRESHOLDS.get(cls, 0.55)
+        # elif cls == "pituitary":
+
+        #     clahe = cv2.createCLAHE(
+        #         clipLimit=0.7,
+        #         tileGridSize=(8,8)
+        #     )
+
+        #     image = clahe.apply(image)
+        # image = cv2.GaussianBlur(
+        #     image,
+        #     (3,3),
+        #     0.2
+        # )
+        # clahe = cv2.createCLAHE(
+        #     clipLimit=0.8,
+        #     tileGridSize=(8,8)
+        # )
+        # if cls == "pituitary":
+        #     image = clahe.apply(image)
+
+        
+        # pred_prob = predict(image)
+        pred_prob = tta_predict(image)
+
+        pred_prob = cv2.GaussianBlur(
+            pred_prob,
+            (3, 3),
+            0
+        )
+        pred_prob = pred_prob ** 0.9
+        threshold = THRESHOLDS.get(cls, 0.50)
 
         pred_bin = (pred_prob > threshold).astype(np.float32)
+        kernel = np.ones((3,3), np.uint8)
 
+        pred_bin = cv2.morphologyEx(
+            pred_bin.astype(np.uint8),
+            cv2.MORPH_CLOSE,
+            kernel
+        )
+        num_labels, labels, stats, _ = cv2.connectedComponentsWithStats(
+            pred_bin.astype(np.uint8)
+        )
+
+        if num_labels > 1:
+
+            largest = 1 + np.argmax(
+                stats[1:, cv2.CC_STAT_AREA]
+            )
+
+            out = np.zeros_like(pred_bin)
+
+            out[labels == largest] = 1
+
+            pred_bin = out.astype(np.float32)
         # ------------------------------------
         # OPTIONAL POST PROCESS
         # ------------------------------------

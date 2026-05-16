@@ -139,7 +139,7 @@
   
 import torch
 import torch.nn as nn
-from Classification.swin_methods import SwinTransformerSys
+from swin_methods import SwinTransformerSys
 
 device = "cuda" if torch.cuda.is_available() else "cpu"
 
